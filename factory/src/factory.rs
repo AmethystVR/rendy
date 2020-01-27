@@ -1153,6 +1153,11 @@ where
     pub fn instance_id(&self) -> InstanceId {
         self.device.id().instance
     }
+    
+    pub fn instance(&self) -> Option<&Instance<B>> {
+        self.instance.as_instance()
+    }
+
 }
 
 impl<B> std::ops::Deref for Factory<B>
