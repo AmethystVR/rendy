@@ -3,23 +3,37 @@ use std::{
     ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign},
 };
 
-pub use gfx_hal::pso::{DescriptorRangeDesc, DescriptorSetLayoutBinding, DescriptorType};
+pub use gfx_hal::pso::{DescriptorRangeDesc, DescriptorSetLayoutBinding, DescriptorType, ImageDescriptorType, BufferDescriptorType, BufferDescriptorFormat};
 
-const DESCRIPTOR_TYPES_COUNT: usize = 11;
+const DESCRIPTOR_TYPES_COUNT: usize = 14;
 
 const DESCRIPTOR_TYPES: [DescriptorType; DESCRIPTOR_TYPES_COUNT] = [
     DescriptorType::Sampler,
-    DescriptorType::CombinedImageSampler,
-    DescriptorType::SampledImage,
-    DescriptorType::StorageImage,
-    DescriptorType::UniformTexelBuffer,
-    DescriptorType::StorageTexelBuffer,
-    DescriptorType::UniformBuffer,
-    DescriptorType::StorageBuffer,
-    DescriptorType::UniformBufferDynamic,
-    DescriptorType::StorageBufferDynamic,
+    DescriptorType::Image { ty: ImageDescriptorType::Sampled { with_sampler: true } },
+    DescriptorType::Image { ty: ImageDescriptorType::Sampled { with_sampler: false } },
+    DescriptorType::Image { ty: ImageDescriptorType::Storage },
+    DescriptorType::Buffer { ty: BufferDescriptorType::Storage { read_only: true }, format: BufferDescriptorFormat::Structured { dynamic_offset: true } },
+    DescriptorType::Buffer { ty: BufferDescriptorType::Storage { read_only: true }, format: BufferDescriptorFormat::Structured { dynamic_offset: false } },
+    DescriptorType::Buffer { ty: BufferDescriptorType::Storage { read_only: true }, format: BufferDescriptorFormat::Texel },
+    DescriptorType::Buffer { ty: BufferDescriptorType::Storage { read_only: false }, format: BufferDescriptorFormat::Structured { dynamic_offset: true } },
+    DescriptorType::Buffer { ty: BufferDescriptorType::Storage { read_only: false }, format: BufferDescriptorFormat::Structured { dynamic_offset: false } },
+    DescriptorType::Buffer { ty: BufferDescriptorType::Storage { read_only: false }, format: BufferDescriptorFormat::Texel },
+    DescriptorType::Buffer { ty: BufferDescriptorType::Uniform, format: BufferDescriptorFormat::Structured { dynamic_offset: true } },
+    DescriptorType::Buffer { ty: BufferDescriptorType::Uniform, format: BufferDescriptorFormat::Structured { dynamic_offset: false } },
+    DescriptorType::Buffer { ty: BufferDescriptorType::Uniform, format: BufferDescriptorFormat::Texel },
     DescriptorType::InputAttachment,
 ];
+
+fn descriptor_type_to_idx(descr: DescriptorType) -> usize {
+    // Could match on this manually, but there is no reason this would
+    // not get unwrapped.
+    for (idx, check) in DESCRIPTOR_TYPES.iter().enumerate() {
+        if *check == descr {
+            return idx;
+        }
+    }
+    unreachable!();
+}
 
 /// Number of descriptors per type.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -38,7 +52,7 @@ impl DescriptorRanges {
     /// Add a single layout binding.
     /// Useful when created with `DescriptorRanges::zero()`.
     pub fn add_binding(&mut self, binding: DescriptorSetLayoutBinding) {
-        self.counts[binding.ty as usize] += binding.count as u32;
+        self.counts[descriptor_type_to_idx(binding.ty)] += binding.count as u32;
     }
 
     /// Iterate through ranges yelding
@@ -65,7 +79,7 @@ impl DescriptorRanges {
         let mut descs = Self::zero();
 
         for binding in bindings {
-            descs.counts[binding.ty as usize] += binding.count as u32;
+            descs.counts[descriptor_type_to_idx(binding.ty)] += binding.count as u32;
         }
 
         descs
@@ -79,7 +93,7 @@ impl DescriptorRanges {
         let mut descs = Self::zero();
 
         for binding in bindings {
-            descs.counts[binding.ty as usize] += binding.count as u32;
+            descs.counts[descriptor_type_to_idx(binding.ty)] += binding.count as u32;
         }
 
         descs

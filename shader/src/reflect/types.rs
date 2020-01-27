@@ -198,20 +198,20 @@ impl ReflectInto<rendy_core::hal::pso::AttributeDesc> for ReflectInterfaceVariab
 
 impl ReflectInto<rendy_core::hal::pso::DescriptorType> for ReflectDescriptorType {
     fn reflect_into(&self) -> Result<rendy_core::hal::pso::DescriptorType, ReflectTypeError> {
-        use rendy_core::hal::pso::DescriptorType;
+        use rendy_core::hal::pso::{DescriptorType, ImageDescriptorType, BufferDescriptorType, BufferDescriptorFormat};
         use ReflectDescriptorType::*;
 
         match *self {
             Sampler => Ok(DescriptorType::Sampler),
-            CombinedImageSampler => Ok(DescriptorType::CombinedImageSampler),
-            SampledImage => Ok(DescriptorType::SampledImage),
-            StorageImage => Ok(DescriptorType::StorageImage),
-            UniformTexelBuffer => Ok(DescriptorType::UniformTexelBuffer),
-            StorageTexelBuffer => Ok(DescriptorType::StorageTexelBuffer),
-            UniformBuffer => Ok(DescriptorType::UniformBuffer),
-            StorageBuffer => Ok(DescriptorType::StorageBuffer),
-            UniformBufferDynamic => Ok(DescriptorType::UniformBufferDynamic),
-            StorageBufferDynamic => Ok(DescriptorType::StorageBufferDynamic),
+            CombinedImageSampler => Ok(DescriptorType::Image { ty: ImageDescriptorType::Sampled { with_sampler: true } }),
+            SampledImage => Ok(DescriptorType::Image { ty: ImageDescriptorType::Sampled { with_sampler: false } }),
+            StorageImage => Ok(DescriptorType::Image { ty: ImageDescriptorType::Storage }),
+            UniformTexelBuffer => Ok(DescriptorType::Buffer { format: BufferDescriptorFormat::Texel, ty: BufferDescriptorType::Uniform }),
+            StorageTexelBuffer => Ok(DescriptorType::Buffer { format: BufferDescriptorFormat::Texel, ty: BufferDescriptorType::Storage { read_only: false } }),
+            UniformBuffer => Ok(DescriptorType::Buffer { format: BufferDescriptorFormat::Structured { dynamic_offset: false }, ty: BufferDescriptorType::Uniform }),
+            StorageBuffer => Ok(DescriptorType::Buffer { format: BufferDescriptorFormat::Structured { dynamic_offset: false }, ty: BufferDescriptorType::Storage { read_only: false } }),
+            UniformBufferDynamic => Ok(DescriptorType::Buffer { format: BufferDescriptorFormat::Structured { dynamic_offset: true }, ty: BufferDescriptorType::Uniform }),
+            StorageBufferDynamic => Ok(DescriptorType::Buffer { format: BufferDescriptorFormat::Structured { dynamic_offset: false }, ty: BufferDescriptorType::Storage { read_only: false } }),
             InputAttachment => Ok(DescriptorType::InputAttachment),
             AccelerationStructureNV => Err(ReflectTypeError::UnhandledAccelerationStructureNV),
             Undefined => Err(ReflectTypeError::UnhandledUndefined),
