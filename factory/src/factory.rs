@@ -1158,6 +1158,10 @@ where
         self.instance.as_instance()
     }
 
+    pub fn adapter(&self) -> &Adapter<B> {
+        &self.adapter
+    }
+
 }
 
 impl<B> std::ops::Deref for Factory<B>
